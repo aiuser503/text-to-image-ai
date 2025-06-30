@@ -19,7 +19,7 @@ def index():
         try:
             result = client.predict(prompt=prompt, api_name="/predict")
 
-            if os.path.isfile(result):  # if it's a local file
+            if os.path.isfile(result):
                 output_path = os.path.join(OUTPUT_FOLDER, "generated_image.webp")
                 shutil.copy(result, output_path)
                 image_url = "/" + output_path.replace("\\", "/")
@@ -31,5 +31,7 @@ def index():
 
     return render_template("index.html", image_url=image_url, error=error)
 
+# ✅ Fix for Render.com: use host=0.0.0.0 and dynamic port
 if __name__ == "__main__":
-    app.run(debug=True)
+    port = int(os.environ.get("PORT", 5000))
+    app.run(host="0.0.0.0", port=port, debug=True)
