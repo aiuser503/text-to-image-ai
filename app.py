@@ -1,43 +1,37 @@
-from flask import Flask, request, jsonify, render_template
-from flask_cors import CORS
+from flask import Flask, render_template, request
 from gradio_client import Client
+import shutil
 import os
-import datetime
 
-app = Flask(__name__)
-CORS(app)
-
-# Create generated images folder if it doesn't exist
-os.makedirs("static/generated", exist_ok=True)
-
+app = Flask(_name_)
 client = Client("aiuser12345678/sanjay-image-ai")
 
-@app.route("/")
+OUTPUT_FOLDER = "static/generated"
+os.makedirs(OUTPUT_FOLDER, exist_ok=True)
+
+@app.route("/", methods=["GET", "POST"])
 def index():
-    return render_template("index.html")
+    image_url = None
+    error = None
 
-@app.route("/generate", methods=["POST"])
-def generate():
-    try:
-        prompt = request.json.get("prompt")
-        if not prompt:
-            return jsonify({"error": "Prompt is required"}), 400
+    if request.method == "POST":
+        prompt = request.form.get("prompt")
+        try:
+            result = client.predict(prompt=prompt, api_name="/predict")
 
-        result = client.predict(prompt, api_name="/predict")
+            if os.path.isfile(result):
+                output_path = os.path.join(OUTPUT_FOLDER, "generated_image.webp")
+                shutil.copy(result, output_path)
+                image_url = "/" + output_path.replace("\\", "/")
+            else:
+                error = "Model did not return a valid image file."
 
-        filename = f"{datetime.datetime.now().strftime('%Y%m%d%H%M%S')}.webp"
-        filepath = f"static/generated/{filename}"
+        except Exception as e:
+            error = str(e)
 
-        # Save image
-        with open(filepath, "wb") as f:
-            f.write(result)
+    return render_template("index.html", image_url=image_url, error=error)
 
-        return jsonify({"url": f"/static/generated/{filename}"})
-
-    except Exception as e:
-        return jsonify({"error": str(e)}), 500
-
-# Bind to 0.0.0.0 for Render
-if __name__ == "__main__":
-    port = int(os.environ.get("PORT", 10000))
+# ✅ Fix for Render.com: use host=0.0.0.0 and dynamic port
+if _name_ == "_main_":
+    port = int(os.environ.get("PORT", 5000))
     app.run(host="0.0.0.0", port=port, debug=True)
