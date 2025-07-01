@@ -3,7 +3,7 @@ from gradio_client import Client
 import shutil
 import os
 
-app = Flask(_name_)
+app = Flask(__name__)
 client = Client("aiuser12345678/sanjay-image-ai")
 
 OUTPUT_FOLDER = "static/generated"
@@ -32,6 +32,6 @@ def index():
     return render_template("index.html", image_url=image_url, error=error)
 
 # ✅ Fix for Render.com: use host=0.0.0.0 and dynamic port
-if _name_ == "_main_":
+if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))
     app.run(host="0.0.0.0", port=port, debug=True)
